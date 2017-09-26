@@ -17,8 +17,9 @@ class GremlinRestClient(object):
 
     HEADERS = {'content-type': 'application/json'}
 
-    def __init__(self, url="http://localhost:8182"):
+    def __init__(self, url="http://localhost:8182", ssl_verify=None):
         self._url = url
+        self._ssl_verify = ssl_verify
 
     def execute(self, gremlin, bindings=None, lang="gremlin-groovy", query_timeout=None):
         """
@@ -37,7 +38,7 @@ class GremlinRestClient(object):
             "bindings": bindings,
             "language": lang
         }
-        resp = self._post(self._url, json.dumps(payload), query_timeout)
+        resp = self._post(self._url, json.dumps(payload), query_timeout, self._ssl_verify)
         resp = resp.json()
         resp = Response(resp["status"]["code"],
                         resp["result"]["data"],
@@ -45,8 +46,8 @@ class GremlinRestClient(object):
                         resp["result"]["meta"])
         return resp
 
-    def _post(self, url, data, post_timeout=None):
-        resp = requests.post(url, data=data, headers=self.HEADERS, timeout=post_timeout)
+    def _post(self, url, data, post_timeout=None, ssl_verify=None):
+        resp = requests.post(url, data=data, headers=self.HEADERS, timeout=post_timeout, verify=ssl_verify)
         status_code = resp.status_code
         if status_code != 200:
             if status_code == 403:
